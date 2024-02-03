@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>krolok memorian page</title>
+    <style>
+      * {
+        min-width: 0;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-family: "Comic Sans MS", "Comic Sans", cursive;
+      }
+    </style>
+  </head>
+  <body style="background-color: magenta">
+    <audio id="track" src="track.mp3" preload="auto" loop></audio>
+    <div id="preloader" style="background-color: yellow">
+      <center>
+        <img
+          src="https://www.telekarma.pl/userfiles/images/aktualnosci/zdj%C4%99cia%20do%20aktualno%C5%9Bci/przysmaki-dla-krolika.jpg"
+          alt="krolok przycisk "
+          onclick="runPreloader()"
+        />
+        <h1>krolok jest samotny</h1>
+        <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
+      </center>
+    </div>
+    <div id="website" style="background-color: green">
+      <center>
+        <h1>krolok jest zadowolony</h1>
+        <p>zostaw go w spokoju</p>
+        <br />
+        <p>w miedzyczaise mozesz pooogoolaldac jegoj zdjecia</p>
+      </center>
+    </div>
+    <script>
+      document.getElementById("website").style.display = "none";
+      document.getElementById("preloader").style.display = "block";
+
+      // get the images from the server
+      let res = fetch(
+        "https://ag2znq4o7it75bgum5a3go6z4i0aovsv.lambda-url.eu-central-1.on.aws/"
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          console.log(res);
+          // get the images
+          let images = res["image_urls"];
+          // insert into the website with two images per row
+          let html =
+            "<div style='display: flex; flex-wrap: wrap; justify-content: center;'>"; // Flex container
+          for (let i = 0; i < images.length; i++) {
+            html +=
+              "<div style='width: 50%; padding: 10px; box-sizing: border-box;'>";
+            html +=
+              "<img src='" +
+              images[i] +
+              "' style='width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover;'>";
+            html += "</div>";
+          }
+          html += "</div>"; // Close the flex container
+          document.getElementById("website").innerHTML += html;
+        });
+
+      function runPreloader() {
+        document.getElementById("track").play();
+        document.getElementById("website").style.display = "block";
+        document.getElementById("preloader").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
