@@ -63,14 +63,18 @@
             html +=
               "<div style='width: 50%; padding: 10px; box-sizing: border-box;'>";
             html +=
-              "<img src='" +
+              "<img src='loading.gif' data-src='" +
               images[i] +
-              "' style='width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover;'>";
+              "' style='width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover;' onload='imageLoaded(this)'>";
             html += "</div>";
           }
           html += "</div>"; // Close the flex container
           document.getElementById("website").innerHTML += html;
         });
+
+      function imageLoaded(imgElement) {
+        imgElement.src = imgElement.getAttribute("data-src");
+      }
 
       function runPreloader() {
         document.getElementById("track").play();
