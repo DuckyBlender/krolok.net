@@ -1,86 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>krolok memorian page</title>
-    <style>
-      * {
-        min-width: 0;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-family: "Comic Sans MS", "Comic Sans", cursive;
-      }
-    </style>
-  </head>
-  <body style="background-color: magenta">
-    <audio id="track" src="track.mp3" preload="auto" loop></audio>
-    <div
-      id="preloader"
-      style="
-        background-color: yellow;
-        max-width: 768px;
-        margin-left: auto;
-        margin-right: auto;
-      "
-    >
-      <center>
-        <img
-          src="https://s3.eu-central-1.amazonaws.com/krolok.pics/images/photo_2024-02-03_23-01-39.jpg"
-          alt="krolok przycisk "
-          onclick="runPreloader()"
-          width="60%"
-        />
-        <h1>krolok jest samotny</h1>
-        <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
-      </center>
-    </div>
-    <div id="website" style="background-color: green">
-      <center>
-        <h1>krolok jest zadowolony</h1>
-        <p>zostaw go w spokoju</p>
-        <br />
-        <p>w miedzyczaise mozesz pooogoolaldac jegoj zdjecia</p>
-      </center>
-    </div>
-    <script>
-      document.getElementById("website").style.display = "none";
-      document.getElementById("preloader").style.display = "block";
 
-      // get the images from the server
-      let res = fetch(
-        "https://ag2znq4o7it75bgum5a3go6z4i0aovsv.lambda-url.eu-central-1.on.aws/"
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Krolok Memorian Page</title>
+  <style>
+    * {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+    }
+
+    body {
+      background-color: magenta;
+      margin: 0;
+    }
+
+    #preloader {
+      background-color: yellow;
+      max-width: 768px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #website {
+      background-color: green;
+      text-align: center;
+      display: none;
+      padding: 20px;
+    }
+
+    nav a {
+      margin-right: 20px;
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    .image-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .image-gallery div {
+      width: 50%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .image-gallery img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+    }
+
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <audio id="track" src="track.mp3" preload="auto" loop></audio>
+  </header>
+
+  <nav>
+    <center>
+      <a href="?folder=krolok">Krolok</a>
+      <a href="?folder=batman">Batman</a>
+      <a href="?folder=kudlata">Kudłata</a>
+    </center>
+  </nav>
+
+  <main>
+    <section id="preloader">
+      <img src="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg" alt="Krolok Przycisz"
+        onclick="runPreloader()" width="60%" />
+      <h1>Krolok jest samotny</h1>
+      <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
+    </section>
+
+    <section id="website">
+      <h1 id="folderTitle"></h1>
+      <p>zostaw go w spokoju</p>
+      <br>
+      <p>w miedzyczasie mozesz poogladac jego zdjecia</p>
+
+      <div id="loading">
+        <img src="loading.gif" alt="Loading..." />
+      </div>
+
+      <div class="image-gallery"></div>
+    </section>
+  </main>
+
+  <script>
+    // Get folder name from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const folderName = urlParams.get('folder') || 'krolok'; // Default to 'krolok'
+    console.log("URL parameters:", urlParams);
+    console.log("Folder name:", folderName);
+
+    // Update folder title
+    document.getElementById('folderTitle').textContent = folderName + " jest zadowolony";
+
+    // If a folder is specified in the URL, skip the preloader
+    if (urlParams.get('folder')) {
+      runWebsite();
+    } else {
+      document.getElementById("preloader").style.display = "block";
+    }
+
+    function fetchImages() {
+      document.getElementById("loading").style.display = "block";
+      document.querySelector(".image-gallery").innerHTML = "";
+
+      // Fetch the images from the server
+      fetch(
+        "https://ag2znq4o7it75bgum5a3go6z4i0aovsv.lambda-url.eu-central-1.on.aws/",
+        {
+          method: "POST",
+          body: JSON.stringify({ folder_name: folderName }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       )
         .then((res) => res.json())
         .then((res) => {
-          console.log(res);
-          // get the images
-          let images = res["image_urls"];
-          // insert into the website with two images per row
-          let html =
-            "<div style='display: flex; flex-wrap: wrap; justify-content: center;'>"; // Flex container
-          for (let i = 0; i < images.length; i++) {
-            html +=
-              "<div style='width: 50%; padding: 10px; box-sizing: border-box;'>";
-            html +=
-              "<img src='loading.gif' data-src='" +
-              images[i] +
-              "' style='width: 100%; height: auto; aspect-ratio: 1/1; object-fit: cover;' onload='imageLoaded(this)'>";
-            html += "</div>";
+          const images = res.image_urls;
+          const gallery = document.querySelector(".image-gallery");
+
+          let html = "";
+          images.forEach((url) => {
+            html += `
+          <div>
+            <img src="loading.gif" data-src="${url}" alt="Image" onload="imageLoaded(this)">
+          </div>
+        `;
+          });
+
+          if (images.length === 0) {
+            html = "<p>brak zdjec :(</p>";
           }
-          html += "</div>"; // Close the flex container
-          document.getElementById("website").innerHTML += html;
+
+          gallery.innerHTML = html;
+        })
+        .catch((error) => {
+          console.error("Error fetching images:", error);
+          document.querySelector(".image-gallery").innerHTML = "<p>zdjecia broken :(</p>";
+        })
+        .finally(() => {
+          document.getElementById("loading").style.display = "none";
         });
+    }
 
-      function imageLoaded(imgElement) {
-        imgElement.src = imgElement.getAttribute("data-src");
-      }
+    function imageLoaded(imgElement) {
+      imgElement.src = imgElement.getAttribute("data-src");
+    }
 
-      function runPreloader() {
-        document.getElementById("track").play();
-        document.getElementById("website").style.display = "block";
-        document.getElementById("preloader").style.display = "none";
-      }
-    </script>
-  </body>
+    function runPreloader() {
+      document.getElementById("track").play().catch(e => {
+        console.log("Audio autoplay was prevented. Please interact with the page to enable audio.");
+      });
+      runWebsite();
+    }
+
+    function runWebsite() {
+      document.getElementById("website").style.display = "block";
+      document.getElementById("preloader").style.display = "none";
+      fetchImages();
+    }
+  </script>
+</body>
+
 </html>
