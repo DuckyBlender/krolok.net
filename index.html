@@ -4,6 +4,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://krolok.pics">
+  <meta property="og:title" content="Krolok Fanpage">
+  <meta property="og:description" content="krolok & others fanpage">
+  <meta property="og:image" content="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://krolok.pics">
+  <meta property="twitter:title" content="Krolok Fanpage">
+  <meta property="twitter:description" content="krolok & others fanpage">
+  <meta property="twitter:image" content="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg">
+
+  <!-- Other meta tags -->
+  <meta name="description" content="krolok & others fanpage">
+  <meta name="keywords" content="Krolok, Batman, Kudłata, memorial, images">
+  <meta name="author" content="DuckyBlender">
+
   <title>Krolok Memorian Page</title>
   <style>
     * {
@@ -51,9 +71,27 @@
     }
 
     .image-gallery div {
-      width: 50%;
+      width: 100%;
       padding: 10px;
       box-sizing: border-box;
+    }
+
+    @media (min-width: 576px) {
+      .image-gallery div {
+        width: 50%;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .image-gallery div {
+        width: 33.33%;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .image-gallery div {
+        width: 25%;
+      }
     }
 
     .image-gallery img {
@@ -106,7 +144,7 @@
 
   <main>
     <section id="preloader">
-      <img src="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg" alt="Krolok Przycisz"
+      <img src="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg" alt="Krolok Przycisk"
         onclick="runPreloader()" width="60%" />
       <h1>Krolok jest samotny</h1>
       <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
