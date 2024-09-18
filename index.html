@@ -37,6 +37,7 @@
       text-decoration: none;
       color: white;
       font-weight: bold;
+      cursor: pointer;
     }
 
     nav a:hover {
@@ -67,6 +68,26 @@
       text-align: center;
       padding: 20px;
     }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 
@@ -77,9 +98,9 @@
 
   <nav>
     <center>
-      <a href="?folder=krolok">Krolok</a>
-      <a href="?folder=batman">Batman</a>
-      <a href="?folder=kudlata">Kudłata</a>
+      <a onclick="changePage('krolok')">Krolok</a>
+      <a onclick="changePage('batman')">Batman</a>
+      <a onclick="changePage('kudlata')">Kudłata</a>
     </center>
   </nav>
 
@@ -98,7 +119,7 @@
       <p>w miedzyczasie mozesz poogladac jego zdjecia</p>
 
       <div id="loading">
-        <img src="loading.gif" alt="Loading..." />
+        <div class="spinner"></div>
       </div>
 
       <div class="image-gallery"></div>
@@ -106,50 +127,56 @@
   </main>
 
   <script>
-    // Get folder name from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const folderName = urlParams.get('folder') || 'krolok'; // Default to 'krolok'
-    console.log("URL parameters:", urlParams);
-    console.log("Folder name:", folderName);
+    let currentFolder = 'krolok';
+    let isFirstVisit = !localStorage.getItem('visited');
 
-    // Update folder title
-    document.getElementById('folderTitle').textContent = folderName + " jest zadowolony";
+    function changePage(folder) {
+      console.log(`Changing to folder: ${folder}`);
+      currentFolder = folder;
+      updateFolderTitle();
+      fetchImages();
+      history.pushState(null, '', `?folder=${folder}`);
+    }
 
-    // If a folder is specified in the URL, skip the preloader
-    if (urlParams.get('folder')) {
-      runWebsite();
-    } else {
-      document.getElementById("preloader").style.display = "block";
+    function updateFolderTitle() {
+      document.getElementById('folderTitle').textContent = `${currentFolder} jest zadowolony`;
     }
 
     function fetchImages() {
+      console.log(`Fetching images for folder: ${currentFolder}`);
       document.getElementById("loading").style.display = "block";
       document.querySelector(".image-gallery").innerHTML = "";
 
-      // Fetch the images from the server
       fetch(
         "https://ag2znq4o7it75bgum5a3go6z4i0aovsv.lambda-url.eu-central-1.on.aws/",
         {
           method: "POST",
-          body: JSON.stringify({ folder_name: folderName }),
+          body: JSON.stringify({ folder_name: currentFolder }),
           headers: {
             "Content-Type": "application/json",
           },
         }
       )
-        .then((res) => res.json())
         .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then((res) => {
+          console.log(`Received ${res.image_urls.length} images`);
           const images = res.image_urls;
           const gallery = document.querySelector(".image-gallery");
 
           let html = "";
           images.forEach((url) => {
             html += `
-          <div>
-            <img src="loading.gif" data-src="${url}" alt="Image" onload="imageLoaded(this)">
-          </div>
-        `;
+              <div>
+                <img src="${url}" alt="Image" loading="lazy">
+              </div>
+            `;
           });
+
 
           if (images.length === 0) {
             html = "<p>brak zdjec :(</p>";
@@ -172,7 +199,7 @@
 
     function runPreloader() {
       document.getElementById("track").play().catch(e => {
-        console.log("Audio autoplay was prevented. Please interact with the page to enable audio.");
+        console.error("Audio autoplay was prevented:", e);
       });
       runWebsite();
     }
@@ -180,8 +207,39 @@
     function runWebsite() {
       document.getElementById("website").style.display = "block";
       document.getElementById("preloader").style.display = "none";
+      updateFolderTitle();
       fetchImages();
+      localStorage.setItem('visited', 'true');
     }
+
+    // Initial setup
+    window.onload = function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const folderParam = urlParams.get('folder');
+
+      if (folderParam) {
+        console.log(`URL parameter folder: ${folderParam}`);
+        currentFolder = folderParam;
+        runWebsite();
+      } else if (!isFirstVisit) {
+        console.log('Not first visit, skipping preloader');
+        runWebsite();
+      } else {
+        console.log('First visit, showing preloader');
+        document.getElementById("preloader").style.display = "block";
+      }
+    };
+
+    // Handle browser back/forward
+    window.onpopstate = function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const folderParam = urlParams.get('folder');
+      if (folderParam) {
+        currentFolder = folderParam;
+        updateFolderTitle();
+        fetchImages();
+      }
+    };
   </script>
 </body>
 
