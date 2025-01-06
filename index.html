@@ -7,154 +7,42 @@
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://krolok.pics">
+  <meta property="og:url" content="https://krolok.net">
   <meta property="og:title" content="Krolok Fanpage">
   <meta property="og:description" content="krolok & others fanpage">
-  <meta property="og:image" content="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg">
+  <meta property="og:image" content="https://krolok.net/krolok.jpg">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://krolok.pics">
+  <meta property="twitter:url" content="https://krolok.net">
   <meta property="twitter:title" content="Krolok Fanpage">
   <meta property="twitter:description" content="krolok & others fanpage">
-  <meta property="twitter:image" content="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg">
+  <meta property="twitter:image" content="https://krolok.net/krolok.jpg">
 
   <!-- Other meta tags -->
   <meta name="description" content="krolok & others fanpage">
-  <meta name="keywords" content="Krolok, Batman, Kudłata, memorial, images">
+  <meta name="keywords" content="Krolok, Batman, Kudłata, Gamma, Pajda, Cats, Silly, Goofy, Funny">
   <meta name="author" content="DuckyBlender">
 
-  <title>Krolok Memorian Page</title>
-  <style>
-    * {
-      margin-top: 10px;
-      margin-bottom: 10px;
-      font-family: "Comic Sans MS", "Comic Sans", cursive;
-    }
-
-    body {
-      background-color: magenta;
-      margin: 0;
-    }
-
-    #preloader {
-      background-color: yellow;
-      max-width: 768px;
-      margin: 0 auto;
-      text-align: center;
-      padding: 20px;
-    }
-
-    #website {
-      background-color: green;
-      text-align: center;
-      display: none;
-      padding: 20px;
-    }
-
-    nav a {
-      margin-right: 20px;
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    nav a:hover {
-      text-decoration: underline;
-    }
-
-    .image-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .image-gallery div {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-
-    @media (min-width: 576px) {
-      .image-gallery div {
-        width: 50%;
-      }
-    }
-
-    @media (min-width: 768px) {
-      .image-gallery div {
-        width: 33.33%;
-      }
-    }
-
-    @media (min-width: 992px) {
-      .image-gallery div {
-        width: 25%;
-      }
-    }
-
-    .image-gallery img {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 1/1;
-      object-fit: cover;
-    }
-
-    #loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
+  <title>Krolok (& others)</title>
 </head>
 
 <body>
   <header>
-    <audio id="track" src="track.mp3" preload="auto" loop></audio>
+    <audio id="track" src="https://krolok.net/track.mp3" preload="auto" loop></audio>
   </header>
 
   <nav>
-    <center>
-      <a onclick="changePage('krolok')">Krolok</a>
-      <a onclick="changePage('batman')">Batman</a>
-      <a onclick="changePage('kudlata')">Kudłata</a>
-    </center>
+    <div id="play-pause-icon" onclick="togglePlayPause()">▶️</div>
+    <!-- Dynamically generated pet links will appear here -->
   </nav>
 
   <main>
-    <section id="preloader">
-      <img src="https://s3.eu-central-1.amazonaws.com/krolok.pics/krolok.jpg" alt="Krolok Przycisk"
-        onclick="runPreloader()" width="60%" />
-      <h1>Krolok jest samotny</h1>
-      <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
-    </section>
-
     <section id="website">
       <h1 id="folderTitle"></h1>
-      <p>zostaw go w spokoju</p>
+      <p id="leaveAloneText"></p>
       <br>
-      <p>w miedzyczasie mozesz poogladac jego zdjecia</p>
+      <p id="viewPhotosText"></p>
 
       <div id="loading">
         <div class="spinner"></div>
@@ -165,19 +53,50 @@
   </main>
 
   <script>
-    let currentFolder = 'krolok';
-    let isFirstVisit = !localStorage.getItem('visited');
+    // Constants
+    const HARDCODED_PET = 'krolok'; // Change this to the pet you want to hardcode
+    const BUCKET_NAME = 'krolok.net';
+    const BUCKET_REGION = 'eu-central-1';
+    const BUCKET_URL = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com`;
+
+    let currentFolder = HARDCODED_PET;
+    let gender = 'male'; // Default gender
+    let petFolders = [HARDCODED_PET]; // Start with the hardcoded pet, others will be added dynamically
 
     function changePage(folder) {
       console.log(`Changing to folder: ${folder}`);
       currentFolder = folder;
+      updateGender();
       updateFolderTitle();
+      updatePolishText();
       fetchImages();
       history.pushState(null, '', `?folder=${folder}`);
     }
 
+    function updateGender() {
+      if (currentFolder.endsWith('a')) {
+        gender = "female";
+      } else {
+        gender = "male";
+      }
+      console.log(`Updated gender for ${currentFolder}: ${gender}`);
+    }
+
     function updateFolderTitle() {
-      document.getElementById('folderTitle').textContent = `${currentFolder} jest zadowolony`;
+      const title = document.getElementById('folderTitle');
+      const suffix = gender === 'female' ? 'zadowolona' : 'zadowolony';
+      title.textContent = `${currentFolder} jest ${suffix}`;
+      console.log(`Updated folder title: ${title.textContent}`);
+    }
+
+    function updatePolishText() {
+      const leaveAloneText = document.getElementById('leaveAloneText');
+      const viewPhotosText = document.getElementById('viewPhotosText');
+
+      leaveAloneText.textContent = `zostaw ${gender === 'female' ? 'ją' : 'go'} w spokoju`;
+      viewPhotosText.textContent = `w międzyczasie możesz pooglądać ${gender === 'female' ? 'jej' : 'jego'} zdjęcia`;
+
+      console.log(`Updated Polish text: ${leaveAloneText.textContent}, ${viewPhotosText.textContent}`);
     }
 
     function fetchImages() {
@@ -185,42 +104,45 @@
       document.getElementById("loading").style.display = "block";
       document.querySelector(".image-gallery").innerHTML = "";
 
-      fetch(
-        "https://ag2znq4o7it75bgum5a3go6z4i0aovsv.lambda-url.eu-central-1.on.aws/",
-        {
-          method: "POST",
-          body: JSON.stringify({ folder_name: currentFolder }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+      const cachedImages = localStorage.getItem(`images_${currentFolder}`);
+      if (cachedImages) {
+        console.log(`Using cached images for folder: ${currentFolder}`);
+        displayImages(JSON.parse(cachedImages));
+        document.getElementById("loading").style.display = "none";
+        return;
+      }
+
+      console.log(`Fetching S3 bucket XML for folder: ${currentFolder}`);
+      fetch(`${BUCKET_URL}/?list-type=2`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
-          return res.json();
+          return response.text();
         })
-        .then((res) => {
-          console.log(`Received ${res.image_urls.length} images`);
-          const images = res.image_urls;
-          const gallery = document.querySelector(".image-gallery");
+        .then(data => {
+          console.log(`Successfully fetched S3 bucket XML`);
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data, "text/xml");
 
-          let html = "";
-          images.forEach((url) => {
-            html += `
-              <div>
-                <img src="${url}" alt="Image" loading="lazy">
-              </div>
-            `;
-          });
+          const keys = xmlDoc.getElementsByTagName('Key');
+          const images = [];
 
-
-          if (images.length === 0) {
-            html = "<p>brak zdjec :(</p>";
+          const imageRegex = new RegExp(`^images/${currentFolder}/.*\\.(jpg|jpeg|webp|png)$`, 'i');
+          for (let key of keys) {
+            const keyText = key.textContent;
+            console.log(`Testing key: ${keyText} for folder: ${currentFolder}`);
+            if (imageRegex.test(keyText)) {
+              images.push(`${BUCKET_URL}/${keyText}`);
+            }
           }
 
-          gallery.innerHTML = html;
+          console.log(`Found ${images.length} images for folder: ${currentFolder}`);
+
+          localStorage.setItem(`images_${currentFolder}`, JSON.stringify(images));
+          console.log(`Cached images for folder: ${currentFolder}`);
+
+          displayImages(images);
         })
         .catch((error) => {
           console.error("Error fetching images:", error);
@@ -231,54 +153,249 @@
         });
     }
 
-    function imageLoaded(imgElement) {
-      imgElement.src = imgElement.getAttribute("data-src");
+    function displayImages(images) {
+      const gallery = document.querySelector(".image-gallery");
+      let html = "";
+
+      if (images.length === 0) {
+        html = "<p>brak zdjec :(</p>";
+        console.warn(`No images found for folder: ${currentFolder}`);
+      } else {
+        images.forEach((url) => {
+          html += `
+            <div>
+              <img src="${url}" alt="Image" loading="lazy">
+            </div>
+          `;
+        });
+        console.log(`Displayed ${images.length} images for folder: ${currentFolder}`);
+      }
+
+      gallery.innerHTML = html;
     }
 
-    function runPreloader() {
-      document.getElementById("track").play().catch(e => {
-        console.error("Audio autoplay was prevented:", e);
+    function togglePlayPause() {
+      const audio = document.getElementById("track");
+      const playPauseIcon = document.getElementById("play-pause-icon");
+
+      if (audio.paused) {
+        audio.play().then(() => {
+          playPauseIcon.textContent = "⏸️"; // Change to pause icon
+          console.log("Audio is now playing.");
+        }).catch(error => {
+          console.error("Error attempting to play audio:", error);
+        });
+      } else {
+        audio.pause();
+        playPauseIcon.textContent = "▶️"; // Change to play icon
+        console.log("Audio is paused.");
+      }
+    }
+
+    function fetchPetFolders() {
+      console.log("Fetching pet folders from S3 bucket");
+      fetch(`${BUCKET_URL}/?list-type=2`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.text();
+        })
+        .then(data => {
+          console.log("Successfully fetched S3 bucket XML");
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data, "text/xml");
+
+          const keys = xmlDoc.getElementsByTagName('Key');
+          const folders = new Set();
+
+          for (let key of keys) {
+            const keyText = key.textContent;
+            if (keyText.startsWith("images/")) {
+              const folder = keyText.split("/")[1];
+              if (folder && folder !== HARDCODED_PET) {
+                folders.add(folder);
+              }
+            }
+          }
+
+          petFolders = [HARDCODED_PET, ...Array.from(folders)];
+          console.log(`Found pet folders: ${petFolders.join(", ")}`);
+
+          generateNavLinks();
+        })
+        .catch((error) => {
+          console.error("Error fetching pet folders:", error);
+        });
+    }
+
+    function generateNavLinks() {
+      const nav = document.querySelector("nav");
+      let html = "";
+
+      petFolders.forEach(folder => {
+        html += `<a onclick="changePage('${folder}')">${folder}</a>`;
       });
-      runWebsite();
-    }
+      html += nav.innerHTML;
 
-    function runWebsite() {
-      document.getElementById("website").style.display = "block";
-      document.getElementById("preloader").style.display = "none";
-      updateFolderTitle();
-      fetchImages();
-      localStorage.setItem('visited', 'true');
+      nav.innerHTML = html;
+      console.log("Generated navigation links");
     }
 
     // Initial setup
     window.onload = function () {
+      console.log("Window loaded");
+
+      const audio = document.getElementById("track");
+
       const urlParams = new URLSearchParams(window.location.search);
       const folderParam = urlParams.get('folder');
 
       if (folderParam) {
         console.log(`URL parameter folder: ${folderParam}`);
         currentFolder = folderParam;
-        runWebsite();
-      } else if (!isFirstVisit) {
-        console.log('Not first visit, skipping preloader');
-        runWebsite();
-      } else {
-        console.log('First visit, showing preloader');
-        document.getElementById("preloader").style.display = "block";
       }
+
+      updateGender();
+      updateFolderTitle();
+      updatePolishText();
+      fetchImages();
+
+      fetchPetFolders();
     };
 
     // Handle browser back/forward
     window.onpopstate = function () {
+      console.log("Handling popstate event");
       const urlParams = new URLSearchParams(window.location.search);
       const folderParam = urlParams.get('folder');
       if (folderParam) {
         currentFolder = folderParam;
+        updateGender();
         updateFolderTitle();
+        updatePolishText();
         fetchImages();
       }
     };
   </script>
+
+<style>
+  * {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+  }
+
+  body {
+    background-color: magenta;
+    margin: 0;
+  }
+
+  #website {
+    background-color: green;
+    text-align: center;
+    padding: 20px;
+  }
+
+  nav {
+    display: flex;
+    justify-content: center; /* Center the list of links */
+    align-items: center; /* Vertically center all items */
+    flex-wrap: wrap; /* Allow wrapping for smaller screens */
+    gap: 10px; /* Spacing between items */
+    padding: 10px; /* Add padding for spacing */
+    position: relative; /* For absolute positioning of the play/pause icon */
+  }
+
+  nav a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 8px 16px; 
+    border-radius: 4px; 
+    transition: background-color 0.3s; 
+    user-select: none;
+  }
+
+  nav a:hover {
+    text-decoration: underline;
+  }
+
+  .image-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .image-gallery div {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 576px) {
+    .image-gallery div {
+      width: 50%;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .image-gallery div {
+      width: 33.33%;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .image-gallery div {
+      width: 25%;
+    }
+  }
+
+  .image-gallery img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+  }
+
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  #play-pause-icon {
+    position: absolute; /* Position the icon absolutely within the nav */
+    right: 20px; /* Align to the right */
+    cursor: pointer;
+    font-size: 48px; /* Larger size */
+    color: white;
+    user-select: none;
+    display: flex;
+    align-items: center; /* Center vertically */
+  }
+</style>
 </body>
 
 </html>
