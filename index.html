@@ -10,14 +10,14 @@
   <meta property="og:url" content="https://krolok.net">
   <meta property="og:title" content="Krolok Fanpage">
   <meta property="og:description" content="krolok & others fanpage">
-  <meta property="og:image" content="https://s3.eu-central-1.amazonaws.com/krolok.net/krolok.jpg">
+  <meta property="og:image" content="/images/krolok/krolok.webp">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://krolok.net">
   <meta property="twitter:title" content="Krolok Fanpage">
   <meta property="twitter:description" content="krolok & others fanpage">
-  <meta property="twitter:image" content="https://s3.eu-central-1.amazonaws.com/krolok.net/krolok.jpg">
+  <meta property="twitter:image" content="/images/krolok/krolok.webp">
 
   <!-- Other meta tags -->
   <meta name="description" content="krolok & others fanpage">
@@ -131,7 +131,7 @@
 
 <body>
   <header>
-    <audio id="track" src="https://s3.eu-central-1.amazonaws.com/krolok.net/track.mp3" preload="auto" loop></audio>
+    <audio id="track" src="/track.mp3" preload="auto" loop></audio>
   </header>
 
   <nav>
@@ -146,7 +146,7 @@
 
   <main>
     <section id="preloader">
-      <img src="https://s3.eu-central-1.amazonaws.com/krolok.net/krolok.jpg" alt="Krolok Przycisk"
+      <img src="/images/krolok/krolok.webp" alt="Krolok Przycisk"
         onclick="runPreloader()" width="60%" />
       <h1>Krolok jest samotny</h1>
       <p>poglasz go pls <i>kliknij debilu</i> (włącz dźwięk)</p>
@@ -167,8 +167,10 @@
   </main>
 
   <script>
+    const manifestUrl = '/images-manifest.json';
     let currentFolder = 'krolok';
     let isFirstVisit = !localStorage.getItem('visited');
+    let imageManifest = null;
     let gender = 'male'; // Default gender
 
     function changePage(folder) {
@@ -209,55 +211,34 @@
       console.log(`Updated Polish text: ${leaveAloneText.textContent}, ${viewPhotosText.textContent}`);
     }
 
+    function getManifest() {
+      if (imageManifest) {
+        return Promise.resolve(imageManifest);
+      }
+
+      return fetch(manifestUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          imageManifest = data;
+          console.log("Loaded images manifest");
+          return imageManifest;
+        });
+    }
+
     function fetchImages() {
       console.log(`Fetching images for folder: ${currentFolder}`);
       document.getElementById("loading").style.display = "block";
       document.querySelector(".image-gallery").innerHTML = "";
 
-      // Check if images are cached in localStorage
-      const cachedImages = localStorage.getItem(`images_${currentFolder}`);
-      if (cachedImages) {
-        console.log(`Using cached images for folder: ${currentFolder}`);
-        displayImages(JSON.parse(cachedImages));
-        document.getElementById("loading").style.display = "none";
-        return;
-      }
-
-      // Fetch the S3 bucket XML response
-      console.log(`Fetching S3 bucket XML for folder: ${currentFolder}`);
-      fetch("https://s3.eu-central-1.amazonaws.com/krolok.net/?list-type=2")
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.text();
-        })
-        .then(data => {
-          console.log(`Successfully fetched S3 bucket XML`);
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(data, "text/xml");
-
-          // Extract all <Key> elements
-          const keys = xmlDoc.getElementsByTagName('Key');
-          const images = [];
-
-          // Filter keys that belong to the current folder
-          const imageRegex = new RegExp(`^images/${currentFolder}/.*\\.(jpg|jpeg|webp|png)$`, 'i');
-          for (let key of keys) {
-            const keyText = key.textContent;
-            console.log(`Testing key: ${keyText} for folder: ${currentFolder}`);
-            if (imageRegex.test(keyText)) {
-              images.push(`https://s3.eu-central-1.amazonaws.com/krolok.net/${keyText}`);
-            }
-          }
-
+      getManifest()
+        .then(manifest => {
+          const images = manifest[currentFolder] || [];
           console.log(`Found ${images.length} images for folder: ${currentFolder}`);
-
-          // Cache the images in localStorage
-          localStorage.setItem(`images_${currentFolder}`, JSON.stringify(images));
-          console.log(`Cached images for folder: ${currentFolder}`);
-
-          // Display the images
           displayImages(images);
         })
         .catch((error) => {
@@ -351,6 +332,10 @@
         fetchImages();
       }
     };
+
+    getManifest().catch(error => {
+      console.error("Error preloading manifest:", error);
+    });
   </script>
 </body>
 
