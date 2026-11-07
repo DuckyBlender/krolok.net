@@ -21,7 +21,7 @@
 
   <!-- Other meta tags -->
   <meta name="description" content="krolok & others fanpage">
-  <meta name="keywords" content="Krolok, Batman, Kudłata, Gamma, Pajda, Cats, Silly, Goofy, Funny">
+  <meta name="keywords" content="Krolok, Batman, Kudłata, Pajda, Foster, Cats, Silly, Goofy, Funny">
   <meta name="author" content="DuckyBlender">
 
   <title>Krolok (& others)</title>
@@ -139,8 +139,8 @@
       <a onclick="changePage('krolok')">Krolok</a>
       <a onclick="changePage('batman')">Batman</a>
       <a onclick="changePage('kudlata')">Kudłata</a>
-      <a onclick="changePage('gamma')">Gamma</a>
       <a onclick="changePage('pajda')">Pajda</a>
+      <a onclick="changePage('foster')">Foster</a>
     </center>
   </nav>
 
@@ -167,11 +167,11 @@
   </main>
 
   <script>
-    const manifestUrl = '/images-manifest.json';
     let currentFolder = 'krolok';
     let isFirstVisit = !localStorage.getItem('visited');
-    let imageManifest = null;
+    const imageCache = {}; // folder -> list of image URLs
     let gender = 'male'; // Default gender
+    const femaleNames = ['foster'];
 
     function changePage(folder) {
       console.log(`Changing to folder: ${folder}`);
@@ -185,8 +185,8 @@
     }
 
     function updateGender() {
-      // female if ends with "a"
-      if (currentFolder.endsWith('a')) {
+      // female if ends with "a" (or is a known exception)
+      if (currentFolder.endsWith('a') || femaleNames.includes(currentFolder)) {
         gender = "female";
       } else {
         gender = "male";
@@ -211,22 +211,22 @@
       console.log(`Updated Polish text: ${leaveAloneText.textContent}, ${viewPhotosText.textContent}`);
     }
 
-    function getManifest() {
-      if (imageManifest) {
-        return Promise.resolve(imageManifest);
+    function getImages(folder) {
+      if (imageCache[folder]) {
+        return Promise.resolve(imageCache[folder]);
       }
 
-      return fetch(manifestUrl)
+      return fetch(`/api/images?folder=${encodeURIComponent(folder)}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           return response.json();
         })
-        .then(data => {
-          imageManifest = data;
-          console.log("Loaded images manifest");
-          return imageManifest;
+        .then(images => {
+          imageCache[folder] = images;
+          console.log(`Loaded image list for folder: ${folder}`);
+          return images;
         });
     }
 
@@ -235,9 +235,8 @@
       document.getElementById("loading").style.display = "block";
       document.querySelector(".image-gallery").innerHTML = "";
 
-      getManifest()
-        .then(manifest => {
-          const images = manifest[currentFolder] || [];
+      getImages(currentFolder)
+        .then(images => {
           console.log(`Found ${images.length} images for folder: ${currentFolder}`);
           displayImages(images);
         })
@@ -332,10 +331,6 @@
         fetchImages();
       }
     };
-
-    getManifest().catch(error => {
-      console.error("Error preloading manifest:", error);
-    });
   </script>
 </body>
 

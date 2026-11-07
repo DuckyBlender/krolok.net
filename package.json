@@ -1,0 +1,16 @@
+{
+  "name": "krolok-net",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cf dev",
+    "deploy": "cf deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^2.0.0-beta.v.12",
+    "@cloudflare/workers-types": "^5.20261107.1",
+    "cf": "^1.0.0-beta.28",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6"
+  }
+}
